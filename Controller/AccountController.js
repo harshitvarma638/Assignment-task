@@ -3,16 +3,21 @@ const accountCreation = require('../Models/schema');
 const CreateAccount = async(req,res)=>{
     try{
         const { mobile_no } = req.body;
-        const User = await accountCreation.find({mobile_no});
-        if(User){
-            res.status(400).send({success:false,message:"Account with this number already exists"});
+        const isUser = await accountCreation.findOne({mobile_no});
+        // if(isUser){
+        //     return res.status(400).json({success:false,message:"Account with this number already exists"});
+        // }
+        const tempAccount = new accountCreation(req.body);
+        const validationError = tempAccount.validateSync();
+        if (validationError) {
+            return res.status(400).json({ success: false, message: validationError.message });
         }
-        const account = new accountCreation(req.body);
-        const a1 = await account.save();
-        res.status(200).send({success: true,message: "Account created successfully"});
+        req.session.userData = req.body;
+        res.status(200).json({success: true,message: "Account data stored successfully",data: req.body});
     }
     catch(error){
-        res.status(404).send({success:false,message:"Account Not Created.Try Again"});
+        console.log(error);
+        return res.status(500).send({success:false,message:"Account Not Created.Try Again"});
     }
 }
 
